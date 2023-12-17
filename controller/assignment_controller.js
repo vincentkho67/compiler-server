@@ -1,5 +1,5 @@
 const vm = require('vm')
-const { Assignment } = require('../models')
+const { Assignment, UserAssignment } = require('../models')
 
 class AssignmentController {
     static async runCode(req,res,next) {
@@ -38,7 +38,6 @@ class AssignmentController {
         try {
             // Fetch the assignment data by ID
             const assignment = await Assignment.findByPk(id);
-            // console.log(assignment)
 
             // Merge user code with test cases
             const mergedCode = `${code}${assignment.test_cases}`;
@@ -56,6 +55,52 @@ class AssignmentController {
     }
 
     static async submit(req, res, next) {
+        const { user_id } = req.body;
+        const { code } = req.body;
+        const { id } = req.params;
+
+        const context = vm.createContext()
+        context.consoleLogOutput = []
+
+        context.console = {
+            log: (...args) => {
+              context.consoleLogOutput.push(...args);
+            },
+        };
+
+        try {
+            const assignment = await Assignment.findByPk(id);
+
+            const mergedCode = `${code}${assignment.test_cases}`;
+            const result = vm.runInContext(mergedCode, context)
+
+            if (result === true) {
+                await UserAssignment.create(
+                    {
+                        user_id,
+                        assignment_id: id,
+                        score : 100,
+                        state: code
+                    }
+                )
+
+                res.status(201).json({message: 'success submit'})
+            } else {
+                await UserAssignment.create(
+                    {
+                        user_id,
+                        assignment_id: id,
+                        score : 0,
+                        state: code
+                    }
+                )
+                res.status(201).json({message: 'success submit'})
+            }
+
+        } catch (e) {
+            next(e);
+        
+        }
 
     }
 

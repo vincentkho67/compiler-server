@@ -23,6 +23,15 @@ module.exports = {
       updatedAt: new Date()
     }
    ])
+
+   await queryInterface.bulkInsert('Users', [
+    {
+      name: 'Joni',
+      email: 'jonistik@email.com',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+   ])
   },
 
   async down (queryInterface, Sequelize) {
@@ -32,5 +41,7 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
+      await queryInterface.bulkDelete('Assignments', null, {});
+      await queryInterface.bulkDelete('Users', null, {});
   }
 };
